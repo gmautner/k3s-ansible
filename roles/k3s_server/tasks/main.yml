@@ -65,6 +65,7 @@
         daemon_reload: true
         state: restarted
         enabled: true
+      ignore_errors: yes
 
     - name: Create directory .kube
       ansible.builtin.file:
@@ -77,6 +78,13 @@
       when: (groups['server'] | length) > 1
       ansible.builtin.pause:
         seconds: 10
+
+    - name: "Wait until k3s service is running"
+      ansible.builtin.command: systemctl is-active k3s
+      register: service_status
+      until: service_status.stdout == 'active'
+      retries: 20
+      delay: 10
 
     - name: Copy config file to user home directory
       ansible.builtin.copy:
@@ -125,6 +133,14 @@
         daemon_reload: true
         state: restarted
         enabled: true
+      ignore_errors: yes
+
+    - name: "Wait until k3s service is running"
+      ansible.builtin.command: systemctl is-active k3s
+      register: service_status
+      until: service_status.stdout == 'active'
+      retries: 20
+      delay: 10
 
     - name: Verify that all server nodes joined
       when: (groups['server'] | length) > 1
