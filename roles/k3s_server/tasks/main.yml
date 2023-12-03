@@ -33,9 +33,22 @@
         mode: 0644
 
     - name: Copy K3s service file [HA]
-      when: groups['server'] | length > 1
+      when:
+        - groups['server'] | length > 1
+        - cluster_init | bool
       ansible.builtin.template:
         src: "k3s-cluster-init.service.j2"
+        dest: "{{ systemd_dir }}/k3s.service"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy K3s service file [HA]
+      when:
+        - groups['server'] | length > 1
+        - not (cluster_init | bool)
+      ansible.builtin.template:
+        src: "k3s-ha.service.j2"
         dest: "{{ systemd_dir }}/k3s.service"
         owner: root
         group: root
